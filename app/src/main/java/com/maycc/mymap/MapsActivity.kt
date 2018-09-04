@@ -1,8 +1,11 @@
 package com.maycc.mymap
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
+import android.support.v7.app.AlertDialog
 import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -17,6 +20,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+
+    private val accessFineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
+    private val accessCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
+    private val permissionRequestCode = 100
 
     private lateinit var mMap: GoogleMap
 
@@ -34,9 +41,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationProviderClient = FusedLocationProviderClient(this)
-        initLocationRequest()
         initLocationCallback()
-        settingConstantLocation()
+        initLocationRequest()
     }
 
     /**
@@ -50,11 +56,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 
     private fun initLocationRequest() {
@@ -79,8 +80,65 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+
     @SuppressLint("MissingPermission")
-    private fun settingConstantLocation() {
+    private fun getConstantLocation() {
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null)
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (validatePermissions()) {
+            getConstantLocation()
+        } else {
+            askPermissions()
+        }
+    }
+
+    private fun validatePermissions(): Boolean {
+        val isPermissionFineLocation = ActivityCompat.checkSelfPermission(this, accessFineLocation) == PackageManager.PERMISSION_GRANTED
+        val isPermissionCoarseLocation= ActivityCompat.checkSelfPermission(this, accessCoarseLocation) == PackageManager.PERMISSION_GRANTED
+
+        return isPermissionFineLocation && isPermissionCoarseLocation
+    }
+
+    private fun askPermissions() {
+        val shouldShowMsj = ActivityCompat.shouldShowRequestPermissionRationale(this, accessFineLocation)
+
+        if (shouldShowMsj) {
+            showAlertOfExplication("Necesitamos saber tu ubicación para mostrarla en el mapa")
+        } else {
+            requestThePermissions()
+        }
+    }
+
+    private fun requestThePermissions() {
+        ActivityCompat.requestPermissions(this, arrayOf(accessFineLocation, accessCoarseLocation), permissionRequestCode)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode) {
+            permissionRequestCode -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getConstantLocation()
+                }
+            }
+        }
+    }
+
+    private fun showAlertOfExplication(txt: String) {
+        AlertDialog.Builder(this).apply {
+            title = "Explicación del permiso"
+            setNegativeButton("CANCELAR", null)
+
+            setPositiveButton("ACEPTAR") {dialog, which ->
+                requestThePermissions()
+            }
+
+            show()
+        }
     }
 }
