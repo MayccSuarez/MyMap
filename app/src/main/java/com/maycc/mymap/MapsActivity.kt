@@ -58,12 +58,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
        showLocationButton()
+        setTypeMap()
     }
 
     @SuppressLint("MissingPermission")
     private fun showLocationButton() {
         mMap.isMyLocationEnabled = true
         mMap.uiSettings.isMyLocationButtonEnabled = true
+    }
+
+    private fun setTypeMap() {
+        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
     }
 
     private fun initLocationRequest() {
