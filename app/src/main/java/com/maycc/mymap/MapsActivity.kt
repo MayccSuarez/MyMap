@@ -73,6 +73,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 for (location in locationResult?.locations!!) {
                     val longitude = location.longitude
                     val latitude = location.latitude
+                    val currentLocation = LatLng(latitude, longitude)
+                    showMarker(currentLocation)
 
                     Toast.makeText(applicationContext, "$longitude $latitude", Toast.LENGTH_SHORT).show()
                 }
@@ -80,6 +82,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun showMarker(latLng: LatLng) {
+        mMap.addMarker(MarkerOptions().position(latLng).title("Estoy aquí"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+    }
 
     @SuppressLint("MissingPermission")
     private fun getConstantLocation() {
@@ -94,6 +100,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         } else {
             askPermissions()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
     private fun validatePermissions(): Boolean {
