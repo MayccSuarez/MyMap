@@ -102,7 +102,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun showMarker(latLng: LatLng) {
         marker = mMap.addMarker(MarkerOptions().position(latLng).title("Estoy aquí"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
     }
 
     @SuppressLint("MissingPermission")
