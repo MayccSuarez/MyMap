@@ -17,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -26,6 +27,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val permissionRequestCode = 100
 
     private lateinit var mMap: GoogleMap
+    private var marker: Marker? = null
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val locationRequest = LocationRequest()
@@ -70,6 +72,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
 
+                if (marker != null) {
+                    marker?.remove()
+                }
+
                 for (location in locationResult?.locations!!) {
                     val latitude = location.latitude
                     val longitude = location.longitude
@@ -84,7 +90,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun showMarker(latLng: LatLng) {
-        mMap.addMarker(MarkerOptions().position(latLng).title("Estoy aquí"))
+        marker = mMap.addMarker(MarkerOptions().position(latLng).title("Estoy aquí"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
     }
 
