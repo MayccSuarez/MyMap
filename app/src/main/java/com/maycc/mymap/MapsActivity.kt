@@ -41,7 +41,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationProviderClient = FusedLocationProviderClient(this)
-        initLocationCallback()
         initLocationRequest()
     }
 
@@ -56,6 +55,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+
     }
 
     private fun initLocationRequest() {
@@ -71,10 +71,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 super.onLocationResult(locationResult)
 
                 for (location in locationResult?.locations!!) {
-                    val longitude = location.longitude
                     val latitude = location.latitude
-                    val currentLocation = LatLng(latitude, longitude)
-                    showMarker(currentLocation)
+                    val longitude = location.longitude
+
+                    val latLng = LatLng(latitude, longitude)
+                    showMarker(latLng)
 
                     Toast.makeText(applicationContext, "$longitude $latitude", Toast.LENGTH_SHORT).show()
                 }
@@ -89,6 +90,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     @SuppressLint("MissingPermission")
     private fun getConstantLocation() {
+        initLocationCallback()
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
@@ -144,6 +146,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun showAlertOfExplication(txt: String) {
         AlertDialog.Builder(this).apply {
             title = "Explicación del permiso"
+            setMessage(txt)
+
             setNegativeButton("CANCELAR", null)
 
             setPositiveButton("ACEPTAR") {dialog, which ->
