@@ -12,12 +12,10 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
@@ -60,6 +58,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         showLocationButton()
         setTypeMap()
+        addMarkers()
     }
 
     @SuppressLint("MissingPermission")
@@ -69,7 +68,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setTypeMap() {
-        mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+    }
+
+    private fun addMarkers() {
+        val catamayoAirport = LatLng(-3.996828, -79.369961)
+        val bolivarPark = LatLng(-3.995094, -79.204755)
+
+        mMap.addMarker(MarkerOptions().position(catamayoAirport).title("Aeropuerto Catamayo"))
+        mMap.addMarker(MarkerOptions().position(bolivarPark).title("Parque Bolivar"))
     }
 
     private fun initLocationRequest() {
