@@ -6,22 +6,21 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private val accessFineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
     private val accessCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
@@ -60,6 +59,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         showLocationButton()
         setTypeMap()
+        addMarkers()
+
+        mMap.setOnMarkerClickListener(this)
+    }
+
+    override fun onMarkerClick(marker: Marker?): Boolean {
+        var numberClicks = marker?.tag as? Int
+
+        if (numberClicks != null) {
+            numberClicks++
+            marker?.tag = numberClicks
+            Toast.makeText(this, "$numberClicks clicks", Toast.LENGTH_SHORT).show()
+        }
+
+        return false
     }
 
     @SuppressLint("MissingPermission")
@@ -69,7 +83,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun setTypeMap() {
-        mMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+    }
+
+    private fun addMarkers() {
+        val catamayoAirport = LatLng(-3.996828, -79.369961)
+        val bolivarPark = LatLng(-3.995094, -79.204755)
+
+        mMap.addMarker(MarkerOptions().position(catamayoAirport).title("Aeropuerto Catamayo"))
+                .tag = 0
+        mMap.addMarker(MarkerOptions().position(bolivarPark).title("Parque Bolivar"))
+                .tag = 0
     }
 
     private fun initLocationRequest() {
