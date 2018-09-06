@@ -16,9 +16,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -90,9 +88,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val catamayoAirport = LatLng(-3.996828, -79.369961)
         val bolivarPark = LatLng(-3.995094, -79.204755)
 
-        mMap.addMarker(MarkerOptions().position(catamayoAirport).title("Aeropuerto Catamayo"))
-                .tag = 0
-        mMap.addMarker(MarkerOptions().position(bolivarPark).title("Parque Bolivar"))
+        val markerCatamayoAirport = mMap.addMarker(MarkerOptions().position(catamayoAirport)
+                .title("Aeropuerto Catamayo")) as Marker
+                markerCatamayoAirport.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                markerCatamayoAirport.tag = 0
+
+        mMap.addMarker(MarkerOptions().position(bolivarPark)
+                .title("Parque Bolivar"))
                 .tag = 0
     }
 
@@ -126,7 +128,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     private fun showMarker(latLng: LatLng) {
-        marker = mMap.addMarker(MarkerOptions().position(latLng).title("Estoy aquí"))
+        marker = mMap.addMarker(MarkerOptions().position(latLng).title("Tú"))
+        marker?.snippet = "Estas aquí"
+        marker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
     }
 
