@@ -60,6 +60,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         addMarkers()
 
         mMap.setOnMarkerClickListener(this)
+        addMarkerLongClick()
     }
 
     override fun onMarkerClick(marker: Marker?): Boolean {
@@ -73,6 +74,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         return false
     }
+
+    private fun addMarkerLongClick() {
+        mMap.setOnMapLongClickListener {
+            location: LatLng? ->
+                mMap.addMarker(MarkerOptions().position(location!!))
+
+        }
+    }
+
+
 
     @SuppressLint("MissingPermission")
     private fun showLocationButton() {
