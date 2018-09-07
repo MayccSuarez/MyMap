@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
-import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -59,8 +58,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         setTypeMap()
         addMarkers()
 
+        setListenersMap()
+    }
+
+    private fun setListenersMap() {
         mMap.setOnMarkerClickListener(this)
-        addMarkerLongClick()
+        addMarkerWithLongClick()
     }
 
     override fun onMarkerClick(marker: Marker?): Boolean {
@@ -75,7 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         return false
     }
 
-    private fun addMarkerLongClick() {
+    private fun addMarkerWithLongClick() {
         mMap.setOnMapLongClickListener {
             location: LatLng? ->
                 mMap.addMarker(MarkerOptions().position(location!!)).isDraggable = true
