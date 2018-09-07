@@ -2,6 +2,7 @@ package com.maycc.mymap
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -56,7 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap = googleMap
         showLocationButton()
         setTypeMap()
-        addMarkers()
+        addStaticsMarkers()
 
         setListenersMap()
     }
@@ -75,6 +76,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             Toast.makeText(this, "$numberClicks clicks", Toast.LENGTH_SHORT).show()
         }
 
+
+
         return false
     }
 
@@ -86,8 +89,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
     }
 
-
-
     @SuppressLint("MissingPermission")
     private fun showLocationButton() {
         mMap.isMyLocationEnabled = true
@@ -98,7 +99,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
     }
 
-    private fun addMarkers() {
+    private fun addStaticsMarkers() {
         val catamayoAirport = LatLng(-3.996828, -79.369961)
         val bolivarPark = LatLng(-3.995094, -79.204755)
 
@@ -110,6 +111,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap.addMarker(MarkerOptions().position(bolivarPark)
                 .title("Parque Bolivar"))
                 .tag = 0
+
+        drawLine(catamayoAirport, bolivarPark)
+    }
+
+    private fun drawLine(locationOne: LatLng, locationTwo: LatLng) {
+        val polylineOptions = PolylineOptions()
+                                        .add(locationOne)
+                                        .add(locationTwo)
+                                        .color(Color.CYAN)
+
+        mMap.addPolyline(polylineOptions)
     }
 
     private fun initLocationRequest() {
