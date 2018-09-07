@@ -78,7 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private fun addMarkerLongClick() {
         mMap.setOnMapLongClickListener {
             location: LatLng? ->
-                mMap.addMarker(MarkerOptions().position(location!!))
+                mMap.addMarker(MarkerOptions().position(location!!)).isDraggable = true
 
         }
     }
