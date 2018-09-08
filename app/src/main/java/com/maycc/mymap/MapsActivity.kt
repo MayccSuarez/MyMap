@@ -7,7 +7,12 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import android.widget.Toast
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -30,6 +35,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val locationRequest = LocationRequest()
     private lateinit var locationCallback: LocationCallback
+
+    private var myLocation: LatLng? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +93,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             location: LatLng? ->
                 mMap.addMarker(MarkerOptions().position(location!!)).isDraggable = true
 
+                val origin = "${myLocation?.latitude},${myLocation?.longitude}"
+                val destination = "${location.latitude},${location.longitude}"
+                val params = "origin=$origin&destination=$destination&mode=driving&key"
+
+                val url = "https://maps.googleapis.com/maps/api/directions/json?$params"
+                makeRequestApiMaps(url)
         }
+    }
+
+    private fun makeRequestApiMaps(url: String) {
+        val requestQueue = Volley.newRequestQueue(this)
+
+        val request = StringRequest(Request.Method.GET, url,
+                        Response.Listener<String> {
+                            response ->  Log.d("RESPONSE", response)
+
+                        }, Response.ErrorListener {
+
+                        })
+
+        requestQueue.add(request)
     }
 
     @SuppressLint("MissingPermission")
@@ -144,8 +171,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     val latitude = location.latitude
                     val longitude = location.longitude
 
-                    val latLng = LatLng(latitude, longitude)
-                    showMarker(latLng)
+                    myLocation = LatLng(latitude, longitude)
+                    showMarker(myLocation!!)
 
                     Toast.makeText(applicationContext, "$longitude $latitude", Toast.LENGTH_SHORT).show()
                 }
