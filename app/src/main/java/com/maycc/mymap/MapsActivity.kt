@@ -38,6 +38,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var locationCallback: LocationCallback
 
     private var myLocation: LatLng? = null
+    private var route: Polyline? = null
+    private var destinationMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +94,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private fun addMarkerWithLongClick() {
         mMap.setOnMapLongClickListener {
             location: LatLng? ->
-                mMap.addMarker(MarkerOptions().position(location!!)).isDraggable = true
+
+
+                if (destinationMarker != null) {
+                    destinationMarker?.remove()
+                }
+
+                destinationMarker = mMap.addMarker(MarkerOptions().position(location!!))
+                destinationMarker?.isDraggable = true
 
                 val origin = "${myLocation?.latitude},${myLocation?.longitude}"
                 val destination = "${location.latitude},${location.longitude}"
@@ -108,13 +117,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val request = StringRequest(Request.Method.GET, url,
                         Response.Listener<String> {
-                            response ->
-                                Log.d("RESPONSE", response)
+                            response ->  Log.d("ERROR_RESPONSE", response)
+
+                                if (route != null) {
+                                    route?.remove()
+                                }
+
                                 val coordinates = getCoordinates(response)
                                 traceRoute(coordinates)
 
                         }, Response.ErrorListener {
-
+                            error ->  Log.d("ERROR_RESPONSE", error.toString())
                         })
 
         requestQueue.add(request)
@@ -137,7 +150,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     private fun traceRoute(coordinates: PolylineOptions) {
-        mMap.addPolyline(coordinates)
+         route = mMap.addPolyline(coordinates)
     }
 
     @SuppressLint("MissingPermission")
