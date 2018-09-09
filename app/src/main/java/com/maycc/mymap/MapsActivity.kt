@@ -7,7 +7,12 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import android.widget.Toast
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -17,6 +22,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.gson.Gson
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -30,6 +36,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val locationRequest = LocationRequest()
     private lateinit var locationCallback: LocationCallback
+
+    private var myLocation: LatLng? = null
+    private var route: Polyline? = null
+    private var destinationMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,9 +94,63 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private fun addMarkerWithLongClick() {
         mMap.setOnMapLongClickListener {
             location: LatLng? ->
-                mMap.addMarker(MarkerOptions().position(location!!)).isDraggable = true
 
+
+                if (destinationMarker != null) {
+                    destinationMarker?.remove()
+                }
+
+                destinationMarker = mMap.addMarker(MarkerOptions().position(location!!))
+                destinationMarker?.isDraggable = true
+
+                val origin = "${myLocation?.latitude},${myLocation?.longitude}"
+                val destination = "${location.latitude},${location.longitude}"
+                val params = "origin=$origin&destination=$destination&mode=driving"
+
+                val url = "https://maps.googleapis.com/maps/api/directions/json?$params"
+                makeRequestApiMaps(url)
         }
+    }
+
+    private fun makeRequestApiMaps(url: String) {
+        val requestQueue = Volley.newRequestQueue(this)
+
+        val request = StringRequest(Request.Method.GET, url,
+                        Response.Listener<String> {
+                            response ->  Log.d("ERROR_RESPONSE", response)
+
+                                if (route != null) {
+                                    route?.remove()
+                                }
+
+                                val coordinates = getCoordinates(response)
+                                traceRoute(coordinates)
+
+                        }, Response.ErrorListener {
+                            error ->  Log.d("ERROR_RESPONSE", error.toString())
+                        })
+
+        requestQueue.add(request)
+    }
+
+    private fun getCoordinates(jsonResponse: String): PolylineOptions {
+        val coordinates = PolylineOptions()
+
+        val gSon = Gson()
+        val routeResponse= gSon.fromJson(jsonResponse, RouteResponse::class.java)
+
+        val points = routeResponse.routes[0].legs[0].steps
+
+        for (point in points) {
+            coordinates.add(point.start_location.toLatLng())
+            coordinates.add(point.end_location.toLatLng())
+        }
+
+        return coordinates
+    }
+
+    private fun traceRoute(coordinates: PolylineOptions) {
+         route = mMap.addPolyline(coordinates)
     }
 
     @SuppressLint("MissingPermission")
@@ -144,8 +208,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                     val latitude = location.latitude
                     val longitude = location.longitude
 
-                    val latLng = LatLng(latitude, longitude)
-                    showMarker(latLng)
+                    myLocation = LatLng(latitude, longitude)
+                    showMarker(myLocation!!)
 
                     Toast.makeText(applicationContext, "$longitude $latitude", Toast.LENGTH_SHORT).show()
                 }
