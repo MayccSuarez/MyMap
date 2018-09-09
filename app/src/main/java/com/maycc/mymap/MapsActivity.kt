@@ -22,6 +22,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.gson.Gson
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -95,7 +96,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
                 val origin = "${myLocation?.latitude},${myLocation?.longitude}"
                 val destination = "${location.latitude},${location.longitude}"
-                val params = "origin=$origin&destination=$destination&mode=driving&key"
+                val params = "origin=$origin&destination=$destination&mode=driving"
 
                 val url = "https://maps.googleapis.com/maps/api/directions/json?$params"
                 makeRequestApiMaps(url)
@@ -107,13 +108,36 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         val request = StringRequest(Request.Method.GET, url,
                         Response.Listener<String> {
-                            response ->  Log.d("RESPONSE", response)
+                            response ->
+                                Log.d("RESPONSE", response)
+                                val coordinates = getCoordinates(response)
+                                traceRoute(coordinates)
 
                         }, Response.ErrorListener {
 
                         })
 
         requestQueue.add(request)
+    }
+
+    private fun getCoordinates(jsonResponse: String): PolylineOptions {
+        val coordinates = PolylineOptions()
+
+        val gSon = Gson()
+        val routeResponse= gSon.fromJson(jsonResponse, RouteResponse::class.java)
+
+        val points = routeResponse.routes[0].legs[0].steps
+
+        for (point in points) {
+            coordinates.add(point.start_location.toLatLng())
+            coordinates.add(point.end_location.toLatLng())
+        }
+
+        return coordinates
+    }
+
+    private fun traceRoute(coordinates: PolylineOptions) {
+        mMap.addPolyline(coordinates)
     }
 
     @SuppressLint("MissingPermission")
