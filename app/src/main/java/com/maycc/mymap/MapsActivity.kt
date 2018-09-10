@@ -133,6 +133,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             REQUEST_CHECK_SETTINGS -> {
 
                 if (resultCode == Activity.RESULT_OK) {
+                    getLocationUpdates()
                     Toast.makeText(applicationContext, "GPS HABILITADO", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(applicationContext, "GPS DESHABILITADO", Toast.LENGTH_SHORT).show()
