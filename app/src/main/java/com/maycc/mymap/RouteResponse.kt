@@ -6,7 +6,11 @@ class RouteResponse(var routes: ArrayList<Route>)
 
 class Route(var legs: ArrayList<Leg>)
 
-class Leg(var steps: ArrayList<Step>)
+class Leg(var steps: ArrayList<Step>, var distance: Distance, var duration: Duration)
+
+class Distance(var text: String)
+
+class Duration(var text: String)
 
 class Step(var end_location: LatLon, var start_location: LatLon)
 

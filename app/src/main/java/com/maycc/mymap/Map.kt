@@ -114,14 +114,19 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
 
         val request = StringRequest(Request.Method.GET, url,
                 Response.Listener<String> {
-                    response ->  Log.d("ERROR_RESPONSE", response)
+                    response ->  Log.d("RESPONSE", response)
 
                     if (route != null) {
                         route?.remove()
                     }
 
-                    val coordinates = getCoordinates(response)
+                    val routeResponse = mapOutJson(response)
+
+                    val coordinates = getCoordinates(routeResponse)
                     traceRoute(coordinates)
+
+                    showToastDistanceDurationTraceRoute(routeResponse)
+
 
                 }, Response.ErrorListener {
                     error ->  Log.d("ERROR_RESPONSE", error.toString())
@@ -130,11 +135,13 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
         requestQueue.add(request)
     }
 
-    private fun getCoordinates(jsonResponse: String): PolylineOptions {
-        val coordinates = PolylineOptions()
-
+    private fun mapOutJson(jsonResponse: String): RouteResponse{
         val gSon = Gson()
-        val routeResponse= gSon.fromJson(jsonResponse, RouteResponse::class.java)
+        return gSon.fromJson(jsonResponse, RouteResponse::class.java)
+    }
+
+    private fun getCoordinates(routeResponse: RouteResponse): PolylineOptions {
+        val coordinates = PolylineOptions()
 
         val points = routeResponse.routes[0].legs[0].steps
 
@@ -148,6 +155,13 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
 
     private fun traceRoute(coordinates: PolylineOptions) {
         route = map.addPolyline(coordinates)
+    }
+
+    private fun showToastDistanceDurationTraceRoute(routeResponse: RouteResponse) {
+        val distance = routeResponse.routes[0].legs[0].distance.text
+        val duration = routeResponse.routes[0].legs[0].duration.text
+
+        Toast.makeText(context, "$distance $duration", Toast.LENGTH_SHORT).show()
     }
 
 }
