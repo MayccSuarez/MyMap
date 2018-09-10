@@ -2,13 +2,11 @@ package com.maycc.mymap
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import android.util.Log
-import android.widget.Toast
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -24,22 +22,17 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.gson.Gson
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val accessFineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
     private val accessCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
     private val permissionRequestCode = 100
 
-    private lateinit var mMap: GoogleMap
-    private var marker: Marker? = null
+    private lateinit var map: Map
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val locationRequest = LocationRequest()
     private lateinit var locationCallback: LocationCallback
-
-    private var myLocation: LatLng? = null
-    private var route: Polyline? = null
-    private var destinationMarker: Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,135 +51,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
      * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * we just add a myMarker near Sydney, Australia.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        showLocationButton()
-        setTypeMap()
-        addStaticsMarkers()
-
-        setListenersMap()
+        map = Map(googleMap, this)
+        map.showLocationButton()
+        map.addStaticsMarkers()
+        map.setListenersMap()
     }
 
-    private fun setListenersMap() {
-        mMap.setOnMarkerClickListener(this)
-        addMarkerWithLongClick()
-    }
-
-    override fun onMarkerClick(marker: Marker?): Boolean {
-        var numberClicks = marker?.tag as? Int
-
-        if (numberClicks != null) {
-            numberClicks++
-            marker?.tag = numberClicks
-            Toast.makeText(this, "$numberClicks clicks", Toast.LENGTH_SHORT).show()
-        }
-
-
-
-        return false
-    }
-
-    private fun addMarkerWithLongClick() {
-        mMap.setOnMapLongClickListener {
-            location: LatLng? ->
-
-
-                if (destinationMarker != null) {
-                    destinationMarker?.remove()
-                }
-
-                destinationMarker = mMap.addMarker(MarkerOptions().position(location!!))
-                destinationMarker?.isDraggable = true
-
-                val origin = "${myLocation?.latitude},${myLocation?.longitude}"
-                val destination = "${location.latitude},${location.longitude}"
-                val params = "origin=$origin&destination=$destination&mode=driving"
-
-                val url = "https://maps.googleapis.com/maps/api/directions/json?$params"
-                makeRequestApiMaps(url)
-        }
-    }
-
-    private fun makeRequestApiMaps(url: String) {
-        val requestQueue = Volley.newRequestQueue(this)
-
-        val request = StringRequest(Request.Method.GET, url,
-                        Response.Listener<String> {
-                            response ->  Log.d("ERROR_RESPONSE", response)
-
-                                if (route != null) {
-                                    route?.remove()
-                                }
-
-                                val coordinates = getCoordinates(response)
-                                traceRoute(coordinates)
-
-                        }, Response.ErrorListener {
-                            error ->  Log.d("ERROR_RESPONSE", error.toString())
-                        })
-
-        requestQueue.add(request)
-    }
-
-    private fun getCoordinates(jsonResponse: String): PolylineOptions {
-        val coordinates = PolylineOptions()
-
-        val gSon = Gson()
-        val routeResponse= gSon.fromJson(jsonResponse, RouteResponse::class.java)
-
-        val points = routeResponse.routes[0].legs[0].steps
-
-        for (point in points) {
-            coordinates.add(point.start_location.toLatLng())
-            coordinates.add(point.end_location.toLatLng())
-        }
-
-        return coordinates
-    }
-
-    private fun traceRoute(coordinates: PolylineOptions) {
-         route = mMap.addPolyline(coordinates)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun showLocationButton() {
-        mMap.isMyLocationEnabled = true
-        mMap.uiSettings.isMyLocationButtonEnabled = true
-    }
-
-    private fun setTypeMap() {
-        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
-    }
-
-    private fun addStaticsMarkers() {
-        val catamayoAirport = LatLng(-3.996828, -79.369961)
-        val bolivarPark = LatLng(-3.995094, -79.204755)
-
-        val markerCatamayoAirport = mMap.addMarker(MarkerOptions().position(catamayoAirport)
-                .title("Aeropuerto Catamayo")) as Marker
-                markerCatamayoAirport.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-                markerCatamayoAirport.tag = 0
-
-        mMap.addMarker(MarkerOptions().position(bolivarPark)
-                .title("Parque Bolivar"))
-                .tag = 0
-
-        drawLine(catamayoAirport, bolivarPark)
-    }
-
-    private fun drawLine(locationOne: LatLng, locationTwo: LatLng) {
-        val polylineOptions = PolylineOptions()
-                                        .add(locationOne)
-                                        .add(locationTwo)
-                                        .color(Color.CYAN)
-
-        mMap.addPolyline(polylineOptions)
-    }
 
     private fun initLocationRequest() {
         locationRequest.interval = 10000
@@ -200,32 +76,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
 
-                if (marker != null) {
-                    marker?.remove()
-                }
-
                 for (location in locationResult?.locations!!) {
-                    val latitude = location.latitude
-                    val longitude = location.longitude
-
-                    myLocation = LatLng(latitude, longitude)
-                    showMarker(myLocation!!)
-
-                    Toast.makeText(applicationContext, "$longitude $latitude", Toast.LENGTH_SHORT).show()
+                    val myLocation = LatLng(location.latitude, location.longitude)
+                    map.showMarkerCurrentLocation(myLocation)
                 }
             }
         }
     }
 
-    private fun showMarker(latLng: LatLng) {
-        marker = mMap.addMarker(MarkerOptions().position(latLng).title("Tú"))
-        marker?.snippet = "Estas aquí"
-        marker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-    }
-
     @SuppressLint("MissingPermission")
-    private fun getConstantLocation() {
+    private fun getLocationUpdates() {
         initLocationCallback()
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null)
     }
@@ -234,7 +94,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         super.onStart()
 
         if (validatePermissions()) {
-            getConstantLocation()
+            getLocationUpdates()
         } else {
             askPermissions()
         }
@@ -242,7 +102,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onPause() {
         super.onPause()
+        stopLocationUpdates()
+    }
 
+    private fun stopLocationUpdates() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
@@ -273,7 +136,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         when (requestCode) {
             permissionRequestCode -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    getConstantLocation()
+                    getLocationUpdates()
                 }
             }
         }
