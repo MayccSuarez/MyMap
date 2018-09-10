@@ -100,7 +100,12 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
                 val params = "origin=$origin&destination=$destination&mode=driving"
 
                 val url = "https://maps.googleapis.com/maps/api/directions/json?$params"
-                makeRequestApiMaps(url)
+
+                if (isAvailableNetwork(context)) {
+                    makeRequestApiMaps(url)
+                } else {
+                    Toast.makeText(context, "No hay conección a internet para determinar la ruta", Toast.LENGTH_SHORT).show()
+                }
         }
     }
 
