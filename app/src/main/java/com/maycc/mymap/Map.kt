@@ -35,7 +35,6 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
 
         myMarker = map.addMarker(MarkerOptions().position(latLng).title("Tú"))
         myMarker?.snippet = "Estas aquí"
-        myMarker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
     }
 
     private fun deleteMarkerPrevious(marker: Marker) {
@@ -93,6 +92,7 @@ class Map(var map: GoogleMap, var context: Context) : GoogleMap.OnMarkerClickLis
                 }
 
                 destinationMarker = map.addMarker(MarkerOptions().position(location!!))
+                destinationMarker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 destinationMarker?.isDraggable = true
 
                 val origin = "${myLocation?.latitude},${myLocation?.longitude}"
