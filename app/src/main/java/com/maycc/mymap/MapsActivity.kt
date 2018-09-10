@@ -1,20 +1,22 @@
 package com.maycc.mymap
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import android.util.Log
+import android.widget.Toast
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -28,11 +30,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val accessCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
     private val permissionRequestCode = 100
 
+    private val REQUEST_CHECK_SETTINGS = 500
+
     private lateinit var map: Map
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val locationRequest = LocationRequest()
-    private lateinit var locationCallback: LocationCallback
+    private var locationCallback: LocationCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +66,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         map.addStaticsMarkers()
         map.setListenersMap()
     }
-
 
     private fun initLocationRequest() {
         locationRequest.interval = 10000
@@ -94,9 +97,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onStart()
 
         if (validatePermissions()) {
-            getLocationUpdates()
+            checkLocationSettings()
         } else {
             askPermissions()
+        }
+    }
+
+    private fun checkLocationSettings() {
+        val builder = LocationSettingsRequest.Builder()
+                                                .addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(this)
+        val task = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            locationSettingsResponse ->  getLocationUpdates()
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    exception.startResolutionForResult(this@MapsActivity,
+                            REQUEST_CHECK_SETTINGS)
+
+                } catch (sendEx: IntentSender.SendIntentException) {
+
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        when(requestCode) {
+            REQUEST_CHECK_SETTINGS -> {
+
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(applicationContext, "GPS HABILITADO", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(applicationContext, "GPS DESHABILITADO", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -106,7 +147,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        if (locationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        }
     }
 
     private fun validatePermissions(): Boolean {
